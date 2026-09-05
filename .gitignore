@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.log
+.vite/
+.DS_Store
+package-lock.json
+PLAN.md
