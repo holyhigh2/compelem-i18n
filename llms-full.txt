@@ -1,0 +1,258 @@
+# compelem-i18n - Full API Reference
+
+## Overview
+
+compelem-i18n is an internationalization plugin for CompElem web components. It provides reactive translations with automatic component re-rendering when the locale changes.
+
+## Installation
+
+```bash
+npm install compelem-i18n
+```
+
+Peer dependency: `compelem >= 0.27.0`
+
+## Import
+
+```ts
+import { createI18n } from 'compelem-i18n'
+```
+
+---
+
+## createI18n<S>(options: I18nOptions<S>): I18n<S>
+
+Creates an i18n instance.
+
+### Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `locale` | `string` | `navigator.language` → `'en'` | Current locale |
+| `fallbackLocale` | `string` | — | Fallback locale for missing keys |
+| `messages` | `Record<string, LocaleMessages>` | required | Message tables per locale |
+| `datetimeFormats` | `Record<string, Record<string, Intl.DateTimeFormatOptions>>` | — | Named date formats for `d()` |
+| `numberFormats` | `Record<string, Record<string, Intl.NumberFormatOptions>>` | — | Named number formats for `n()` |
+| `syncDocumentLang` | `boolean` | `true` | Sync `document.documentElement.lang` on locale switch |
+
+---
+
+## I18n Instance
+
+### t(key: string, params?): string
+
+Translate a key with optional interpolation or pluralization.
+
+**Behavior:**
+- Without params: returns the message string
+- With object params: interpolates `{name}` placeholders
+- With number params: selects ICU plural form
+- With object containing `count`: both interpolation and pluralization
+
+**Examples:**
+
+```ts
+// Basic translation
+i18n.t('hello') // "Hello!"
+
+// Interpolation
+i18n.t('hello', { name: 'Ken' }) // "Hello, Ken!"
+
+// Dot-path interpolation
+i18n.t('greeting', { user: { name: 'Ken' } }) // with 'Hi {user.name}'
+
+// Pluralization
+i18n.t('apple', 1) // "1 apple"
+i18n.t('apple', 5) // "5 apples"
+
+// Plural with interpolation
+i18n.t('apple', { count: 5 }) // "5 apples"
+```
+
+**Fallback chain:**
+1. Exact key match in current locale
+2. Language primary subtag (zh-CN → zh)
+3. Fallback locale
+4. Fallback locale subtag
+5. Return key itself (with dev warning)
+
+### d(date: Date | number, formatKey?): string
+
+Format a date using `Intl.DateTimeFormat`.
+
+```ts
+// Using named format
+i18n.d(Date.now(), 'long') // "September 8, 2026"
+
+// Default format
+i18n.d(new Date()) // locale-dependent date string
+```
+
+### n(value: number, formatKey?): string
+
+Format a number using `Intl.NumberFormat`.
+
+```ts
+// Using named format
+i18n.n(1234.5, 'currency') // "$1,234.50"
+
+// Default format
+i18n.n(1234.5) // "1,234.5"
+```
+
+### locale: string
+
+Get or set the current locale. Setting triggers re-render of subscribed components.
+
+```ts
+i18n.locale // "zh-CN"
+i18n.locale = 'en' // Triggers re-render
+```
+
+### setLocale(locale: string): void
+
+Switch locale, notify listeners, update subscribed components.
+
+```ts
+i18n.setLocale('en')
+```
+
+### fallbackLocale: string (getter)
+
+Get the fallback locale.
+
+### availableLocales: string[] (getter)
+
+Get list of available locales.
+
+### mergeLocaleMessage(locale: string, messages: LocaleMessages): void
+
+Deep-merge a message table for lazy loading.
+
+```ts
+// Load additional locale after fetch
+const jaDict = await fetch('/locales/ja.json').then(r => r.json())
+i18n.mergeLocaleMessage('ja', jaDict)
+```
+
+### getLocaleMessage(locale: string): LocaleMessages
+
+Get a message table for a locale.
+
+### onLocaleChange(cbk: (locale: string, oldLocale: string) => void): () => void
+
+Listen for locale changes. Returns an unsubscribe function.
+
+```ts
+const stop = i18n.onLocaleChange((locale, oldLocale) => {
+  console.log(`Locale changed from ${oldLocale} to ${locale}`)
+})
+
+// Later
+stop()
+```
+
+---
+
+## Message Format
+
+### Keys
+
+- Dot paths and nested objects are equivalent: `t('a.b')` ≙ `messages[locale].a.b`
+- Literal keys containing dots take precedence
+
+### Parameters
+
+- `{name}` placeholders for interpolation
+- Missing params keep the placeholder string
+- Dot-path params: `t('hi', { user: { name: 'Ken' } })` with `'Hi {user.name}'`
+
+### Pluralization
+
+Uses `Intl.PluralRules(locale)` for plural form selection.
+
+**Nested form:**
+```ts
+messages: {
+  en: {
+    apple: {
+      one: '{count} apple',
+      other: '{count} apples'
+    }
+  }
+}
+```
+
+**Flat suffix form:**
+```ts
+messages: {
+  en: {
+    apple_one: '{count} apple',
+    apple_other: '{count} apples'
+  }
+}
+```
+
+**Plural categories:** zero, one, two, few, many, other
+
+---
+
+## Reactivity Notes
+
+- `t()` is reactive **inside `render()`** — component subscribes automatically
+- Called in event handlers or lifecycle hooks: returns current translation without subscribing
+- `t()` inside `@computed` getters does **not** re-evaluate on locale switch
+- On locale switch, subscribed components re-render as a whole
+- Updates are batched by CompElem's Queue into one microtask
+
+---
+
+## TypeScript Key Hints
+
+```ts
+const messages = {
+  en: {
+    cart: { title: 'Cart' },
+    apple: { one: '{count} apple', other: '{count} apples' }
+  }
+}
+
+export const i18n = createI18n<typeof messages.en>({
+  locale: 'en',
+  messages
+})
+
+i18n.t('cart.title')   // ✓ autocompleted
+i18n.t('cart.titl')    // ✗ type error
+```
+
+---
+
+## Types
+
+```ts
+interface I18nOptions<S> {
+  locale?: string
+  fallbackLocale?: string
+  messages: Record<string, LocaleMessages>
+  datetimeFormats?: Record<string, Record<string, Intl.DateTimeFormatOptions>>
+  numberFormats?: Record<string, Record<string, Intl.NumberFormatOptions>>
+  syncDocumentLang?: boolean
+}
+
+interface I18n<S> {
+  t(key: keyof S, params?: Record<string, any> | number): string
+  d(date: Date | number, formatKey?: string): string
+  n(value: number, formatKey?: string): string
+  locale: string
+  setLocale(locale: string): void
+  fallbackLocale: string
+  availableLocales: string[]
+  mergeLocaleMessage(locale: string, messages: LocaleMessages): void
+  getLocaleMessage(locale: string): LocaleMessages
+  onLocaleChange(cbk: LocaleChangeCallback): () => void
+}
+
+type LocaleMessages = Record<string, string | LocaleMessages>
+type LocaleChangeCallback = (locale: string, oldLocale: string) => void
+```

@@ -1,0 +1,66 @@
+# compelem-i18n
+
+> An i18n plugin for CompElem — reactive translations for web components with ICU pluralization and locale fallback.
+
+## Docs
+
+- [README](./README.md) - Installation, usage, and API reference
+- [GitHub Repository](https://github.com/holyhigh2/compelem-i18n) - Source code and issues
+
+## Features
+
+- Reactive `t()` — components re-render automatically on locale change
+- `{name}` interpolation with dot-path parameter access
+- ICU pluralization via `Intl.PluralRules`
+- Locale fallback chain: locale → language subtag → fallbackLocale → key
+- `d()` / `n()` localized date/number formatting
+- Lazy loading with `mergeLocaleMessage()`
+- TypeScript key autocompletion
+
+## Quick Start
+
+```ts
+import { CompElem, tag, h } from 'compelem'
+import { createI18n } from 'compelem-i18n'
+
+const i18n = createI18n({
+  locale: 'zh-CN',
+  fallbackLocale: 'en',
+  messages: {
+    'zh-CN': { hello: '你好，{name}！' },
+    en: { hello: 'Hello, {name}!' },
+  },
+})
+
+@tag('my-comp')
+class MyComp extends CompElem {
+  render() {
+    return h`<p>${i18n.t('hello', { name: 'Ken' })}</p>`
+  }
+}
+```
+
+## API
+
+### createI18n(options)
+Create an i18n instance.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `locale` | `string` | `navigator.language` | Current locale |
+| `fallbackLocale` | `string` | — | Fallback locale |
+| `messages` | `Record<string, LocaleMessages>` | required | Message tables per locale |
+| `datetimeFormats` | `Record<string, Record<string, Intl.DateTimeFormatOptions>>` | — | Named date formats |
+| `numberFormats` | `Record<string, Record<string, Intl.NumberFormatOptions>>` | — | Named number formats |
+| `syncDocumentLang` | `boolean` | `true` | Sync `<html lang>` on switch |
+
+### Instance Methods
+
+| Method | Description |
+| --- | --- |
+| `t(key, params?)` | Translate with interpolation/pluralization |
+| `d(date, formatKey?)` | Localized date formatting |
+| `n(value, formatKey?)` | Localized number formatting |
+| `setLocale(locale)` | Switch locale |
+| `mergeLocaleMessage(locale, messages)` | Lazy-load messages |
+| `onLocaleChange(cbk)` | Listen for locale changes |
