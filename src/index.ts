@@ -1,6 +1,7 @@
 import type { CompElem } from "compelem";
 import { getCurrentRenderComponent, makeState } from "compelem";
 import { each, isObject, isString } from "myfx";
+import { registerI18nDevtools } from "./devtools";
 import { formatDate, formatNumber } from "./format";
 import { interpolate, localeChain, resolvePlural, resolveString } from "./message";
 import type { I18nOptions, LocaleMessages, MessageSchema, Path } from "./types";
@@ -227,5 +228,8 @@ export class I18n<S extends MessageSchema = MessageSchema> {
  * 未指定时 key 保持 string 全兼容。
  */
 export function createI18n<S extends MessageSchema = MessageSchema>(options: I18nOptions<S>): I18n<S> {
-  return new I18n<S>(options)
+  const instance = new I18n<S>(options)
+  // devtools 接入点：未安装 devtools 时这里只是往 globalThis 挂一个惰性 provider
+  registerI18nDevtools(instance)
+  return instance
 }

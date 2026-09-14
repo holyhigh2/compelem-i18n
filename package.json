@@ -1,6 +1,6 @@
 {
   "name": "compelem-i18n",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An i18n plugin for CompElem",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,7 +13,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "llms.txt",
+    "README.md"
   ],
   "keywords": [
     "compelem",
