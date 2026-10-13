@@ -1,5 +1,6 @@
 import dts from 'vite-plugin-dts'
 import { defineConfig } from 'vitest/config'
+import { compelemCompiler } from '@compelem/compiler'
 import pkg from './package.json'
 
 // 库模式构建：ESM-only（对齐 compelem 的发布形态），compelem/myfx 保持 external 由消费方提供
@@ -21,6 +22,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    compelemCompiler(),
     dts({
       include: ['src'],
     }),
