@@ -1,6 +1,6 @@
 {
   "name": "compelem-i18n",
-  "version": "0.3.0-beta.1",
+  "version": "0.3.0-beta.2",
   "description": "An i18n plugin for CompElem",
   "type": "module",
   "main": "./dist/index.js",
@@ -39,14 +39,10 @@
     "test": "vitest run",
     "lint": "eslint src test"
   },
-  "peerDependencies": {
-    "compelem": ">=0.30.0",
-    "myfx": "^2.0.0-beta.2"
-  },
   "devDependencies": {
-    "@compelem/compiler": "^0.30.0-beta.2",
+    "@compelem/compiler": "^0.30.0-beta.3",
     "@types/node": "^26.4.1",
-    "compelem": "^0.30.0-beta.2",
+    "compelem": "^0.30.0-beta.3",
     "eslint": "^10.10.0",
     "happy-dom": "^20.14.0",
     "myfx": "^2.0.0-beta.2",
