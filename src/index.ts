@@ -56,7 +56,7 @@ export class I18n<S extends MessageSchema = MessageSchema> {
     this.#datetimeFormats = options.datetimeFormats ?? {}
     this.#numberFormats = options.numberFormats ?? {}
     this.#syncDocumentLang = options.syncDocumentLang !== false
-    this.#localeSig = signal(options.locale ?? defaultLocale())
+    if (options.locale) this.#localeSig.value = options.locale
     if (this.#syncDocumentLang && typeof document !== 'undefined') {
       document.documentElement.lang = this.#localeSig.value
     }
